@@ -1,0 +1,33 @@
+
+.notification {
+    padding: 20px;
+    margin: 50px 100px;
+    border-radius: 5px;
+    color: white;
+
+    font-size: 16px;
+    font-weight: 600;
+    
+    display: flex;
+    justify-content: space-between;
+    
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+    min-width: 450px;
+  }
+  
+  .notification.success {
+    background-color: green;
+  }
+  
+  .notification.error {
+    background-color: red;
+  }
+  .notification .close {
+    cursor: pointer;
+    color: white;
+    font-weight: 800;
+    margin-left: 20px;
+  }
