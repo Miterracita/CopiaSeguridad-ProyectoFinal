@@ -24,7 +24,7 @@ app.use(express.json());
 
 app.use("/users", userRoutes);
 app.use("/bonos", bonoRoutes);
-app.use("/eventos", eventoRoutes);
+app.use("/events", eventoRoutes);
 app.use("/bookings", bookingRoutes);
 
 app.use("*", (req, res, next) => {

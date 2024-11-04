@@ -8,14 +8,15 @@ const newBono = async (req, res, next) => {
       name: req.body.name,
       type: req.body.type,
       active: req.body.active,
-      code: req.body.code || undefined
+      code: req.body.code || undefined,
+      user: req.body.user || undefined
     });
 
     const bonoSaved = await newBono.save();
-
     return res.status(200).json(bonoSaved);
 
   } catch (error) {
+    console.error("Error en el backend al crear el bono:", error);
     return res.status(400).json({ message: "Error al crear el bono", error: error.message });
   }
 }
@@ -41,7 +42,9 @@ const deleteBono = async (req, res, next) => {
 const getBonos = async (req, res, next) => {
 
   try {
-    const bonos = await Bono.find();
+    // const bonos = await Bono.find();
+    const bonos = await Bono.find().populate('user');
+
     return res.status(200).json(bonos);
 
   } catch (error){
@@ -65,9 +68,42 @@ const updateBono = async (req, res, next) => {
   }
 }
 
+
+// CONTROLADOR PARA FILTROS DEL FRONT - REALIZAR BÚSQUEDA POR codigo o usuario asignado
+const searchBonos = async (req, res, next) => {
+  const { code, user } = req.query;
+
+  //primero comprobamos que no envien ambos campos, sólo uno
+  if (code && user) {
+    return res.status(400).json({
+      message: "Solo se puede realizar la búsqueda por 'code' o 'user', no ambos.",
+    });
+  }
+
+ // Inicia el objeto de filtro vacío
+  const filter = {};
+
+  if (code) {
+    // Si el usuario escribió algo en el campo de 'code', añadimos esa condición al filtro
+      filter.code = { $regex: code, $options: 'i' }; // Búsqueda insensible a mayúsculas
+  }
+  if (user) {
+    // Si el usuario escribió algo en el campo de 'user', añadimos esa condición al filtro
+      filter.user = user; // Búsqueda directa por ObjectId
+  }
+
+  try {
+      const bonos = await Bono.find(filter);
+      res.status(200).json(bonos);
+  } catch (error) {
+      res.status(500).json({ message: "Error en la búsqueda", error: error.message });
+  }
+};
+
 module.exports = { 
   newBono,
   deleteBono,
   getBonos,
   updateBono,
+  searchBonos,
 };

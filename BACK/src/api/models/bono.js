@@ -3,7 +3,7 @@ const { preSave, preUpdate, generateCode } = require('../../middlewares/bonoMidd
 
 const bonoSchema = new mongoose.Schema(
   {
-    name: { type: String, trim: true, required: true },
+    name: { type: String, trim: true, required: true, default: 'Bono' },
     type: { 
       type: String, 
       required: true, 
@@ -16,8 +16,8 @@ const bonoSchema = new mongoose.Schema(
     },
     code: { type: String, trim: true, required: true, default: generateCode },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
-    totalUses: { type: Number, required: true },    // Número total de usos que ofrece el bono
-    availableUses: {  type: Number,  required: true  },   // Número de usos que quedan disponibles
+    totalUses: { type: Number, required: true, default: 10 },    // Número total de usos que ofrece el bono
+    availableUses: {  type: Number,  required: true, default: 10  },   // Número de usos que quedan disponibles
     expirationDate: { type: Date, required: false },// Opcional: una fecha de expiración para el bono
 
     // Relación de las reservas hechas con este bono

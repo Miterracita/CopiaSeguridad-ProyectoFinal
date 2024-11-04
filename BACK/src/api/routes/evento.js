@@ -1,16 +1,18 @@
 const express = require('express');
 const eventoRoutes = express.Router();
 const {
-  crearEvento,
-  obtenerEventos,
-  actualizarEvento,
-  eliminarEvento
+  newEvent,
+  getEvents,
+  updateEvents,
+  deleteEvents,
+  searchBonos,
 } = require('../controllers/evento');
 
 // Rutas para eventos
-eventoRoutes.post('/new-evento', crearEvento);
-eventoRoutes.get('/eventos-list', obtenerEventos);
-eventoRoutes.put('/:id', actualizarEvento);
-eventoRoutes.delete('/:id', eliminarEvento);
+eventoRoutes.post('/new-event', newEvent);
+eventoRoutes.get('/events-list', getEvents);
+eventoRoutes.put('/:id', updateEvents);
+eventoRoutes.delete('/:id', deleteEvents);
+eventoRoutes.get('/', searchBonos);
 
 module.exports = eventoRoutes;

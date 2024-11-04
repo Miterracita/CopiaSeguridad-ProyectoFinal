@@ -120,10 +120,10 @@ const updateUser = async (req, res, next) => {
       const { id } = req.params;
       const updatedData = req.body;
 
-      // Validación de datos
-      if (!updatedData.userName && !updatedData.email) {
-        return res.status(400).json({ message: "Al menos un campo debe ser proporcionado para actualizar." });
-      }
+    // Validación de datos
+    if (!updatedData.userName && !updatedData.email && !updatedData.bonos) {
+      return res.status(400).json({ message: "Al menos un campo debe ser proporcionado para actualizar." });
+    }
 
       // Si se envía una nueva imagen, actualizar y eliminar la vieja
       if (req.file) {
@@ -138,8 +138,24 @@ const updateUser = async (req, res, next) => {
         delete updatedData.password;  // Evitar la actualización de la contraseña desde aquí
       }
 
-      const userActualizado = await User.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
+      // Verificar y actualizar los bonos
+      if (updatedData.bonos && Array.isArray(updatedData.bonos)) {
+        // Usar `$set` para reemplazar el arreglo completo o `$addToSet` para agregar bonos sin duplicados
+        await User.findByIdAndUpdate(id, { $set: { bonos: updatedData.bonos } }, { new: true, runValidators: true });
+      }
+      if (updatedData.bonos) {
+        if (updatedData.bonos.add) {
+          // Añadir bonos sin duplicados
+          await User.findByIdAndUpdate(id, { $addToSet: { bonos: { $each: updatedData.bonos.add } } });
+        }
+        if (updatedData.bonos.remove) {
+          // Eliminar bonos específicos
+          await User.findByIdAndUpdate(id, { $pull: { bonos: { $in: updatedData.bonos.remove } } });
+        }
+      }
       
+
+      const userActualizado = await User.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
       if (!userActualizado) {
         return res.status(404).json("Usuario no encontrado");
       }
@@ -147,13 +163,48 @@ const updateUser = async (req, res, next) => {
       return res.status(201).json(userActualizado);
 
   } catch (error){
-      return res.status(400).json("error al actualizar el usuario");
+    console.error("Error al actualizar el usuario:", error.message);
+    return res.status(400).json({ message: "Error al actualizar el usuario", error: error.message });
   }
 }
+
+// CONTROLADOR PARA FILTROS DEL FRONT - REALIZAR BÚSQUEDA POR USERNAME O EMAIL
+const searchUsers = async (req, res, next) => {
+  const { username, email } = req.query;
+
+    //primero comprobamos que no envien ambos campos, sólo uno
+    if (username && email) {
+      return res.status(400).json({
+        message: "Solo se puede realizar la búsqueda por 'username' o 'email', no ambos.",
+      });
+    }
+
+ // Inicia el objeto de filtro vacío
+  const filter = {};
+
+  if (username) {
+    // Si el usuario escribió algo en el campo de 'username', añadimos esa condición al filtro
+      filter.userName = { $regex: username, $options: 'i' }; // Búsqueda insensible a mayúsculas
+  }
+  if (email) {
+    // Si el usuario escribió algo en el campo de 'email', añadimos esa condición al filtro
+      filter.email = { $regex: email, $options: 'i' }; // Búsqueda insensible a mayúsculas
+  }
+
+  try {
+      const users = await User.find(filter);
+      res.status(200).json(users);
+  } catch (error) {
+      res.status(500).json({ message: "Error en la búsqueda", error: error.message });
+  }
+};
+
+
 module.exports = { 
   registro,
   login,
   deleteUser,
   getUsers,
   updateUser,
+  searchUsers,
 };
