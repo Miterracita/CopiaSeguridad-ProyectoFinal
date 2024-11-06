@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Logo from '../../components/Logo/Logo.js';
 import NavBar from '../../components/NavBar/NavBar.js';
@@ -22,7 +22,7 @@ function EventList() {
 
   const [name, setName] = useState('');
 
-    const refreshEvents = async () => {
+    const refreshEvents = useCallback(async () => {
       try {
         const eventList = await getEvents();
         setEvents(eventList || []);  // Aseguramos que siempre sea un arreglo
@@ -30,14 +30,14 @@ function EventList() {
         console.error('Error fetching events:', error);
         setError(error.message || 'Error al obtener la lista de eventos');
       }
-    };
+    }, []);
   
     // Cargar datos al montar el componente
     useEffect(() => {
       refreshEvents();
     }, []);
     
-    const handleSearch = async (e:any) => {
+    const handleSearch = useCallback(async (e:any) => {
       e.preventDefault();
   
       if (!name) {
@@ -57,17 +57,17 @@ function EventList() {
           setError(error.message || 'No se pudieron encontrar eventos.');
           setEvents([]); // Limpia los resultados si hay un error
       }
-    };
+    }, [name]);
 
     //cerrar la ventana de notificación
-    const handleCloseNotification = () => { 
+    const handleCloseNotification = useCallback(() => { 
       setError(null);
-    };
+    }, []);
 
-    const clearFilters = () => {
+    const clearFilters = useCallback(() => {
       setError(null);
       refreshEvents();
-    };
+    }, [refreshEvents]);
 
   return (
     <div className="p-event-list">

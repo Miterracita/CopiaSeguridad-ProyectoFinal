@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Logo from '../../components/Logo/Logo.js';
 import NavBar from '../../components/NavBar/NavBar.js';
@@ -23,7 +23,7 @@ function UsersList() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
 
-  const refreshUsers = async () => {
+  const refreshUsers = useCallback(async () => {
     try {
       const userList = await getUsers();
       setUsers(userList || []);  // Aseguramos que siempre sea un arreglo
@@ -31,14 +31,14 @@ function UsersList() {
       console.error('Error fetching users:', error);
       setError(error.message || 'Error al obtener la lista de usuarios');
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshUsers(); //cargamos la lista de usuarios desde el back
   }, []);
 
   //filtros de busqueda
-  const handleSearch = async (e:any) => {
+  const handleSearch = useCallback(async (e:any) => {
     e.preventDefault();
 
     if (!username && !email ) {
@@ -64,20 +64,20 @@ function UsersList() {
         setError(error.message || 'No se pudieron encontrar usuarios.');
         setUsers([]); // Limpia los resultados si hay un error
     }
-  };
+  }, [username, email]);
 
   //cerrar la ventana de notificación
-  const handleCloseNotification = () => { 
+  const handleCloseNotification = useCallback(() => { 
     setError(null);
-  };
+  }, []);
 
   // limpiar filtros
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setUsername('');
     setEmail('');
     setError(null);
     refreshUsers();
-  };
+  }, [refreshUsers]);
 
   return (
     <div className="p-users-list">

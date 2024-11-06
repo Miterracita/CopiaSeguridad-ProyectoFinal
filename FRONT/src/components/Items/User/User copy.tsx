@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { useState } from 'react';
 
 import Notification from '../../Notification/Notification.js';
 import { AdminBoxButtons } from '../../AdminBoxButtons/AdminBoxButtons.js';
@@ -6,8 +6,6 @@ import FormRegister from '../../Forms/FormRegister/FormRegister.js';
 import Modal from '../../Modal/Modal.js';
 
 import './User.css'
-
-import useCommonReducer from '../../../reducers/useCommonReducer.js';
 
 import { deleteUser } from '../../../services/apiServicesUsers.js';
 
@@ -40,7 +38,7 @@ export interface UserProps {
     refreshUsers: () => void; //funcion que se nos pasa desde userList
 }
 
-const User = memo (({
+const User = ({
     _id,
     userName,
     email,
@@ -48,26 +46,22 @@ const User = memo (({
     imagenPerfil,
     bonos = [],
     refreshUsers, 
- }: UserProps): JSX.Element => {
-    const {
-        state,
-        setError,
-        setNotification,
-        showModal,
-        hideModal,
-        clearMessages,
-      } = useCommonReducer();
+ }: UserProps) => {
+    const [error, setError] = useState<string | null>(null);
+    const [notification, setNotification] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false); // controla si el modal está visible
 
     const imagenXDefecto = "https://res.cloudinary.com/dq2daoeex/image/upload/c_thumb,w_200,g_face/v1723660717/Proyecto10/oy1tksyz1ycc1edxcfqb.jpg";
 
-    const handleDeleteUser = useCallback(async () => {
+    const handleDeleteUser = async () => {
         try {
           const response = await deleteUser(_id);
           const message = response.message;
           setNotification(message || `Usuario eliminado correctamente`);
+        //   refreshUsers((prevUsers: UserProps[]) => prevUsers.filter(user => user._id !== _id));
         
         setTimeout(() =>{
-            clearMessages();
+            setNotification(null);
             refreshUsers();  // Llama a refreshBonos después de eliminar
           }, 3000);
           
@@ -75,22 +69,26 @@ const User = memo (({
           console.error('Error deleting user:', error);
           setError(error.message || 'Error deleting user');
         }
-      }, [_id, clearMessages, refreshUsers, setNotification, setError]);
+      };
 
-    const handleUpdateUser= useCallback(() => {
-        showModal()
-    }, [showModal]);
-
-    const handleCloseModal = () => {
-        hideModal(); // cerrar el modal
+    const handleUpdateUser= () => {
+        setShowModal(true); //abrir el modal con el formulario de users
+      }
+      const handleCloseModal = () => {
+        setShowModal(false); // cerrar el modal
         refreshUsers();
+      };
+    //cerrar la ventana de notificación
+    const handleCloseNotification = () => { 
+        setError(null);
+        setNotification(null);
     };
     
     return (
-        <div className='c-user'>
+        <div className='c-user' key={_id}>
 
-            {state.error && <Notification message={state.error} type="error" onClose={clearMessages} />}
-            {state.notification && <Notification message={state.notification} type="success" onClose={clearMessages} />}
+            {error && <Notification message={error} type="error" onClose={handleCloseNotification}/>}
+            {notification && <Notification message={notification} type="success" onClose={handleCloseNotification}/>}
             
             <div className="box-user" key={_id}>
                 <div className='info-user'>
@@ -134,8 +132,8 @@ const User = memo (({
                     handleDelete={handleDeleteUser}
                 />
             </div>
-            {state.showModal && (
-                <Modal showModal={state.showModal} onCloseModal={handleCloseModal}>
+            {showModal && (
+                <Modal showModal={showModal} onCloseModal={handleCloseModal}>
                     <FormRegister
                         userId={_id}
                         onClose={handleCloseModal}// Prop para cerrar el formulario
@@ -148,6 +146,6 @@ const User = memo (({
             )}
         </div>
     );
-});
+};
 
 export default User;

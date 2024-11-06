@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 import Logo from '../../components/Logo/Logo.js';
 import NavBar from '../../components/NavBar/NavBar.js';
@@ -23,7 +23,7 @@ function BonoList() {
   const [username, setUsername] = useState('');
   const [codigo, setCodigo] = useState('');
 
-  const refreshBonos = useCallback(async () => {
+  const refreshBonos = async () => {
     try {
       const bonosList = await getBono();
       setBonos(bonosList || []);  // Aseguramos que siempre sea un arreglo
@@ -31,7 +31,7 @@ function BonoList() {
       console.error('Error fetching bonos:', error);
       setError(error.message || 'Error al obtener la lista de bonos');
     }
-  }, []);
+  };
 
   // Cargar datos al montar el componente
   useEffect(() => {
@@ -39,7 +39,7 @@ function BonoList() {
   }, []);
 
   //filtros de busqueda de bonos
-  const handleSearch = useCallback(async (e:any) => {
+  const handleSearch = async (e:any) => {
     e.preventDefault();
 
     if (!username && !codigo ) {
@@ -65,20 +65,20 @@ function BonoList() {
         setError(error.message || 'No se pudieron encontrar bonos.');
         setBonos([]); // Limpia los resultados si hay un error
     }
-  }, [username, codigo]);
+  };
 
   //cerrar la ventana de notificación
-  const handleCloseNotification = useCallback(() => { 
+  const handleCloseNotification = () => { 
     setError(null);
-  }, []);
+  };
 
   // limpiar filtros
-  const clearFilters = useCallback(() => {
+  const clearFilters = () => {
     setUsername('');
     setCodigo('');
     setError(null);
     refreshBonos();
-  }, [refreshBonos]);
+  };
 
   return (
     <div className="p-bono-list">

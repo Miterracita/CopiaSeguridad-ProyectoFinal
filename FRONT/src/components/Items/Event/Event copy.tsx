@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { useState } from 'react';
 
 import Notification from '../../../components/Notification/Notification.js';
 import { AdminBoxButtons } from '../../AdminBoxButtons/AdminBoxButtons.js';
@@ -6,8 +6,6 @@ import FormEvent from '../../Forms/FormEvent/FormEvent.js';
 import Modal from '../../Modal/Modal.js';
 
 import './Event.css';
-
-import useCommonReducer from '../../../reducers/useCommonReducer.js';
 
 import { deleteEvent } from '../../../services/apiServicesEvents';
 
@@ -22,7 +20,7 @@ interface EventProps {
     refreshEvents:() => void;
 }
 
-export const Event = memo (({ 
+export const Event = ({ 
     id,
     nombre,
     descripcion,
@@ -31,16 +29,12 @@ export const Event = memo (({
     capacidad,
     refreshEvents,
  }: EventProps): JSX.Element => {
-    const {
-        state,
-        setError,
-        setNotification,
-        showModal,
-        hideModal,
-        clearMessages,
-      } = useCommonReducer();
+    const [error, setError] = useState<string | null>(null); // Estado para el mensaje de error
+    const [notification, setNotification] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false); // controla si el modal está visible
 
-    const handleDeleteEvent = useCallback(async () => {
+
+    const handleDeleteEvent = async () => {
         try {
             const response = await deleteEvent(id);
             const message = response.message;
@@ -48,7 +42,7 @@ export const Event = memo (({
             setError(null); // Limpiar errores anteriores
             
             setTimeout(() =>{
-                clearMessages();
+                setNotification(null);
                 refreshEvents(); // tardará 3 segundos antes de refrescar el listado de eventos y eliminar el mensaje
             }, 3000);
             
@@ -56,28 +50,33 @@ export const Event = memo (({
             console.error('Error eliminando evento:', error);
             setError(error.message ? error.message : JSON.stringify(error) || 'Error eliminando evento'); // Si `error.message` no es string, convertir
         }
-    }, [id, clearMessages, refreshEvents, setNotification, setError]);
+    };
 
     //abrir el modal con el formulario de eventos
-    const handleUpdateEvent = useCallback(() => {
-        showModal();
-    }, [showModal]);
+    const handleUpdateEvent = () => {
+        setShowModal(true);
+    }
 
     //cerrar el modal
     const handleCloseModal = () => {
-        hideModal(); // cerrar el modal
+        setShowModal(false); // cerrar el modal
         refreshEvents();
+    };
+
+    //cerrar la ventana de notificación
+    const handleCloseNotification = () => { 
+        setError(null);
+        setNotification(null);
     };
 
     return (
         <>
-            <div className="c-event">
+            {error && <Notification message={error} type="error" onClose={handleCloseNotification}/>}
+            {notification && <Notification message={notification} type="success" onClose={handleCloseNotification}/>}
 
-                {state.error && <Notification message={state.error} type="error" onClose={clearMessages} />}
-                {state.notification && <Notification message={state.notification} type="success" onClose={clearMessages} />}
-              
-                <div className="box-event" key={id}>
-                    <div className='info-event'>
+            <div className="c-event">      
+                <div className="box-event">
+                    <div className='info-event' id={id}>
                         <h3><span>{nombre}</span></h3>
                         <p><span>{descripcion}</span></p>
                         <p>Fecha: <span>{fecha}</span></p>
@@ -90,8 +89,8 @@ export const Event = memo (({
                     />
                 </div>
             </div>
-            {state.showModal && (
-                <Modal showModal={state.showModal} onCloseModal={handleCloseModal}>
+            {showModal && (
+                <Modal showModal={showModal} onCloseModal={handleCloseModal}>
                     <FormEvent
                         eventId={id}
                         onClose={handleCloseModal}
@@ -107,4 +106,4 @@ export const Event = memo (({
             )}
         </>
     );
-});
+};
