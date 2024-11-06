@@ -13,12 +13,13 @@ const registro = async (req, res, next) => {
       userName: req.body.userName,
       password: req.body.password,
       rol: req.body.rol,
-      imagenPerfil: req.body.imagenPerfil
+      // imagenPerfil: req.body.imagenPerfil
+      imagenPerfil: req.file ? req.file.path : '',
     });
 
-    if (req.file) {
-      newUser.imagenPerfil = req.file.path
-    }
+    // if (req.file) {
+    //   newUser.imagenPerfil = req.file.path
+    // }
 
     // Comprobar si el usuario ya existe por email o nombre de usuario
     const userDuplicated = await User.findOne({ 
@@ -121,7 +122,7 @@ const updateUser = async (req, res, next) => {
       const updatedData = req.body;
 
     // Validación de datos
-    if (!updatedData.userName && !updatedData.email && !updatedData.bonos) {
+    if (!updatedData.userName && !updatedData.email && !updatedData.bonos && !req.file) {
       return res.status(400).json({ message: "Al menos un campo debe ser proporcionado para actualizar." });
     }
 

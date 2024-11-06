@@ -38,7 +38,8 @@ const userSchema = new mongoose.Schema(
     imagenPerfil: { 
       type: String, 
       trim: true, 
-      required: false 
+      required: false ,
+      default: 'https://res.cloudinary.com/dq2daoeex/image/upload/c_thumb,w_200,g_face/v1723660717/Proyecto10/oy1tksyz1ycc1edxcfqb.jpg'
     },
 
     // Un usuario puede tener varios bonos
