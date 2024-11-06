@@ -34,3 +34,10 @@
 .link-box svg {
     fill: white;
 }
+
+/* mobile */
+@media (max-width: 767px) {
+    .secondary-nav-bar ul {
+        flex-direction: column;
+    }
+}

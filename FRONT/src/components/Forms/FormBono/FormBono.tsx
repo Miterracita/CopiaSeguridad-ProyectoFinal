@@ -1,44 +1,67 @@
+import { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
-import { newBono, getBono } from '../../../services/apiServicesBonos';
-import { getUsers } from '../../../services/apiServicesUsers';
-import { useEffect, useState } from 'react';
 import Button from '../../Button/Button';
+import Notification from '../../Notification/Notification';
+
+import { newBono, getBono, updateBono } from '../../../services/apiServicesBonos'; // Importa updateBono
+import { getUsers } from '../../../services/apiServicesUsers';
+
 import './FormBono.css';
 
-const FormBono = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm({
-        defaultValues: {
-            type: '',
-            user: '',
-            expirationDate: '',
-        }
-    });
+export interface BonoData {
+    user?: UserData;
+    expirationDate?: string;
+    type?: string;
+}
 
+export interface UserData {
+    _id: string;
+    userName: string;
+    email: string;
+    rol: string;
+}
+
+interface FormBonoProps {
+    bonoId: string;
+    initialData: BonoData;
+    onClose: () => void;
+}
+
+const FormBono = ({
+    bonoId,
+    initialData,
+    onClose,
+}:FormBonoProps)  => {
+    const { register, handleSubmit, reset, formState: { errors } } = useForm();
     const navigate = useNavigate(); // Hook para redirigir
 
-    const [users, setUsers] = useState([]);
-    const [bonoTypes, setBonoTypes] = useState([]);
+    const [users, setUsers] = useState<UserData[]>([]); 
+    const [bonoTypes, setBonoTypes] = useState<string[]>([]);
+    const [notification, setNotification] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+
         // Fetch users from the API
         const fetchAllUsers = async () => {
             try {
                 const usersData = await getUsers();
                 setUsers(usersData);
-            } catch (error) {
-                console.error('Error fetching users:', error);
+            } catch (error: any) {
+                setError(error.message || 'Error deleting user');
             }
         };
 
         // Fetch bono types from the API
         const fetchBonoTypes = async () => {
             try {
-                const bonosData = await getBono();
-                const types = [...new Set(bonosData.map((bono:any) => bono.type))];
-                setBonoTypes(types);
-            } catch (error) {
-                console.error('Error fetching bono types:', error);
+                const bonoData = await getBono();
+                const types: string[] = bonoData.map((bono:any) => bono.type);
+                const uniqueTypes = Array.from(new Set(types)); //para eliminar duplicados
+                setBonoTypes(uniqueTypes);
+            } catch (error:any) {
+                setError(error.message || 'Error fetching bono types:');
             }
         };
 
@@ -46,29 +69,56 @@ const FormBono = () => {
         fetchBonoTypes();
     }, []);
 
-    const onSubmit = async (formData:any) => {
-        
-        formData.user = formData.user || null; 
+    useEffect(() => {
 
-        try {
-            // Llamada al servicio de creación de bono
-            const result = await newBono(formData);
-            
-            // Redirigir a la lista de bonos
-            navigate('/gestion-bonos'); 
-            
-            // Mostrar un mensaje de éxito aquí debería usar el componente notification <<<<<<< --------------------
-            alert('Bono creado correctamente');
-            console.log(result)
-        } catch (error) {
-            console.error('Error durante la creación del bono:', error);
-            // aquí debería usar el componente notification <<<<<<< --------------------
-            alert('Hubo un error al crear el bono');
+        // Si bonoId está presente, estamos editando; de lo contrario, estamos creando uno nuevo
+        if (bonoId) {
+            reset(initialData);  // Resetea el formulario con los datos del bono existente
+        } else {
+            // Si es un nuevo bono, puedes establecer valores predeterminados aquí
+            reset();
         }
+    }, [bonoId, initialData, reset]);
+
+    const onSubmit = async (formData:any) => {   
+        
+        try {
+            if (bonoId) {
+                // Actualiza el bono si existe bonoId
+                await updateBono(bonoId, formData);
+                setNotification(`Bono actualizado correctamente`);
+                // Agregar un retraso antes de cerrar el modal
+                setTimeout(() => {
+                    onClose();
+                }, 2000)
+            } else {
+                // Crea un nuevo bono si no existe bonoId
+                await newBono(formData);
+                console.log(`Bono creado correctamente`);
+                setNotification(`Bono creado correctamente`);
+
+                setTimeout(() => {
+                    navigate('/gestion-bonos'); // Redirige después de crear el bono
+                }, 2000)               
+            }
+        
+            } catch (error: any) {
+                console.error('Error:', error);
+                setError(error.message || (bonoId ? 'Error al actualizar el bono' : 'Error al crear el bono'));
+        }
+    };
+
+    //cerrar la ventana de notificación
+    const handleCloseNotification = () => { 
+        setError(null);
+        setNotification(null);
     };
 
     return (
         <div className="box-bono-form">
+            {notification && <Notification message={notification} type="success" onClose={handleCloseNotification}/>}
+            {error && <Notification message={error} type="error" onClose={handleCloseNotification}/>}
+
             <form className="box-form-bono" id="bonoForm" onSubmit={handleSubmit(onSubmit)}>
 
                 <div className='box-title'>
@@ -78,33 +128,38 @@ const FormBono = () => {
                         <path d="M7,13H4a4,4,0,0,0-4,4v3a4,4,0,0,0,4,4H7a4,4,0,0,0,4-4V17A4,4,0,0,0,7,13Zm2,7a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V17a2,2,0,0,1,2-2H7a2,2,0,0,1,2,2Z"></path>
                         <path d="M20,13H17a4,4,0,0,0-4,4v3a4,4,0,0,0,4,4h3a4,4,0,0,0,4-4V17A4,4,0,0,0,20,13Zm2,7a2,2,0,0,1-2,2H17a2,2,0,0,1-2-2V17a2,2,0,0,1,2-2h3a2,2,0,0,1,2,2Z"></path>
                     </svg>
-                    <h2><span>New</span> Bono</h2>
+                    <h2><span>{bonoId ? 'Update' : 'New'}</span> Bono</h2>
                 </div>
 
-                <div className='box-item-bono'>
-                    <label>Selecciona el tipo de bono que quieres dar de alta.</label>
-                    <p>El tipo de bono corresponde al número de usos disponibles: </p>
+                {!bonoId && (
+                    <>
+                    <div className='box-item-bono'>
+                        <label>Selecciona el tipo de bono que quieres dar de alta.</label>
+                        <p>El tipo de bono corresponde al número de usos disponibles: </p>
 
-                    <select id="type" {...register("type", {
-                        required: {
-                            value: true,
-                            message: "Necesitas seleccionar un tipo de bono"
-                        },
-                    })}
-                    style={{ borderColor: errors.type ? "red" : "" }}>
-                        <option value="">Tipos de bonos disponibles.</option>
-                        {bonoTypes.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                        ))}
-                    </select>
-                    <p style={{color: 'red', visibility: errors.type ? 'visible' : 'hidden'}}>
-                        {errors.type ? errors.type.message : ''}
-                    </p>
-                </div>
+                        <select id="type" {...register("type", {
+                            required: {
+                                value: true,
+                                message: "Necesitas seleccionar un tipo de bono"
+                            },
+                        })}
+                        style={{ borderColor: errors.type ? "red" : "" }}>
+                            <option value="">Tipos de bonos disponibles.</option>
+                            {bonoTypes.map(type => (
+                                <option key={type} value={type}>{type}</option>
+                            ))}
+                        </select>
+                        <p style={{color: 'red', visibility: errors.type ? 'visible' : 'hidden'}}>
+                            {errors.type && <span>{errors.type.message as string}</span>}
+                        </p>
+                    </div>
+                    </>
+                )}
+
                 <div className='box-item-bono'>
                     <label>¿Quieres asignar el bono a un usuario?: </label>
                     <select id="user" {...register("user")}>
-                        <option value="">Usuarios disponibles (opcional)</option>
+                        <option value="">Usuarios disponibles</option>
                         {users.map(user => (
                             <option key={user._id} value={user._id}>{user.userName}</option>
                         ))}

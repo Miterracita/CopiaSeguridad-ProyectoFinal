@@ -22,30 +22,31 @@ export const login = async (userName:any, password:any) => {
   try {
     const respuestaFinal = await fetch(`${LOCAL_URL}/users/login`, opciones);
 
-    if (respuestaFinal.token) {
+    if (!respuestaFinal.ok) {
+      throw new Error("Error al hacer login");
+    }
+
+    // Convertimos la respuesta a JSON
+    const data = await respuestaFinal.json();
+
+    if (data.token) {
       // guardamos el token una vez identificados, en el localStorage
-      localStorage.setItem("token", respuestaFinal.token);
-      //--> una vez identificados correctamente nos redirige a la página de eventos
-      Home();
+      localStorage.setItem("token", data.token);
+      return data; 
 
     } else {
 
-      console.error('El token no está definido en la respuesta:', respuestaFinal);
+      console.error('El token no está definido en la respuesta:', data);
       console.error("Error al iniciar sesión. Por favor, inténtalo de nuevo.");
     }
 
-    // if (!response.ok) {
-    //   throw new Error("Error al hacer login");
-    // }
-    // const data = await response.json();
-    // return data;
   } catch (error) {
-    console.error("Error durante el login:", error);
-    throw error;
+      console.error("Error durante el login:", error);
+      throw error;
   }
 };
 
-//REGISTRO
+//REGISTRO - NEW USER
 export const registerUser = async (data:any) => {
   const opciones = {
     method: "POST",

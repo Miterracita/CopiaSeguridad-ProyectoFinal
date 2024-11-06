@@ -18,3 +18,10 @@ h2 span {
     align-items: center;
     gap: 10px;
 }
+
+/* mobile */
+@media (max-width: 767px) {
+    .events {
+        padding: 0;
+    }
+}

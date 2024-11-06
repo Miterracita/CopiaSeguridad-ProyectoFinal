@@ -1,79 +1,121 @@
 
 import { useForm } from "react-hook-form";
-import { useNavigate } from 'react-router-dom'; // Para hacer una redirección
-import { newEvent } from '../../../services/apiServicesEvents';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Button from '../../Button/Button';
+import Notification from '../../Notification/Notification';
+
+import { newEvent, updateEvent } from '../../../services/apiServicesEvents';
+
 import './FormEvent.css';
 
-const FormEvent = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm({
-        defaultValues: {
-            name: '',
-            description: '',
-            date: '',
-            hour: '',
-            capacity: ''
-        }
-    });
+interface EventData {
+    name: string;
+    description?: string;
+    date: string;
+    hour: number;
+    capacity?: number;
+}
+
+interface FormEventProps {
+    eventId: string;
+    initialData: EventData;
+    onClose: () => void;
+}
+const FormEvent = ({
+    eventId,
+    initialData,
+    onClose,
+}: FormEventProps) => {
+    const [notification, setNotification] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
     const navigate = useNavigate(); // Hook para redirigir
 
+    useEffect(() => {
+
+        // Si eventId está presente, estamos editando; de lo contrario, estamos creando uno nuevo
+        if (eventId) {
+            reset(initialData);  // Resetea el formulario con los datos del bono existente
+        } else {
+            reset();
+        }
+    }, [eventId, initialData, reset]);
+
     const onSubmit = async (formData:any) => {
         try {
-          // Llamada al servicio de eventos
-          const result = await newEvent(formData);
-          console.log("Evento creado correctamente:", result);
-    
+            if (eventId) {
 
-        //redirigimos
-        navigate('/gestion-eventos'); 
-        // Puedes manejar la respuesta aquí, como mostrar un mensaje de éxito
-        alert('Evento creado correctamente');
-    
-        } catch (error) {
-          console.error('Error durante la creación del evento:', error);
-          // Manejar el error mostrando un mensaje de error en la interfaz
-          alert('Hubo un error al guardar el evento');
+                // Actualiza el bono si existe bonoId
+                await updateEvent(eventId, formData);
+                setNotification(`Evento actualizado correctamente`);
+
+                // Agregar un retraso antes de cerrar el modal
+                setTimeout(() => {
+                    onClose();
+                }, 2000)
+
+            } else {
+
+                // Crea un nuevo bono si no existe bonoId
+                const result = await newEvent(formData);
+                console.log("Evento creado correctamente:", result);
+                setNotification("Evento creado correctamente:");
+
+                setTimeout(() => {
+                    navigate('/gestion-eventos'); // Redirige después de crear el evento
+                }, 2000)               
+            }
+        
+            } catch (error: any) {
+                console.error('Error durante la creación del evento:', error);
+                setError(error.message || (eventId ? 'Error al actualizar el evento' : 'Error al crear el evento'));
         }
-      };
+    };
+
+    const handleCloseNotification = () => { 
+        setError(null);
+        setNotification(null);
+    };
+
 
   return (
     <div className="box-event-form">
+        {notification && <Notification message={notification} type="success" onClose={handleCloseNotification}/>}
+        {error && <Notification message={error} type="error" onClose={handleCloseNotification}/>}
+
         <form className="box-form-event" id="eventForm" onSubmit={handleSubmit(onSubmit)}>
             <div className='box-title'>
                 <svg xmlns="http://www.w3.org/2000/svg" id="Filled" viewBox="0 0 24 24" width="25" height="25">
                     <path d="M0,19a5.006,5.006,0,0,0,5,5H19a5.006,5.006,0,0,0,5-5V10H0Zm17-4.5A1.5,1.5,0,1,1,15.5,16,1.5,1.5,0,0,1,17,14.5Zm-5,0A1.5,1.5,0,1,1,10.5,16,1.5,1.5,0,0,1,12,14.5Zm-5,0A1.5,1.5,0,1,1,5.5,16,1.5,1.5,0,0,1,7,14.5Z"></path>
                     <path d="M19,2H18V1a1,1,0,0,0-2,0V2H8V1A1,1,0,0,0,6,1V2H5A5.006,5.006,0,0,0,0,7V8H24V7A5.006,5.006,0,0,0,19,2Z"></path>
                 </svg>
-                <h2><span>New</span> Event</h2>
+                <h2><span>{eventId ? 'Update' : 'New'}</span> Event</h2>
             </div>
             <div>                
                 <div className='box-item-event'>
                     <label>Nombre: </label>
                     <input type="text" id="name" {...register("name", {
-                        required: {
+                        required: !eventId ? {
                             value: true,
                             message: "Necesitas introducir un nombre para poder continuar"
-                        },
+                        }: false,
                     })}
                     style={{ borderColor: errors.name ? "red" : "" }}/>
                     <p style={{color: 'red', visibility: errors.name ? 'visible' : 'hidden'}}>
-                        {errors.name ? errors.name.message : ''}
+                        {errors.name && <span>{errors.name.message as string}</span>}
                     </p>
                 </div>
             </div>
             <div>                
                 <div className='box-item-event'>
                     <label>Descripción: </label>
-                    <input type="textarea" id="description" {...register("description", {
-                        required: {
-                            value: true,
-                            message: "Necesitas introducir una descripción para poder continuar"
-                        },
-                    })}
+                    <input type="textarea" id="description" {...register("description")}
                     style={{ borderColor: errors.description ? "red" : "" }}/>
                     <p style={{color: 'red', visibility: errors.description ? 'visible' : 'hidden'}}>
-                        {errors.description ? errors.description.message : ''}
+                        {errors.description && <span>{errors.description.message as string}</span>}
                     </p>
                 </div>
             </div>
@@ -81,27 +123,27 @@ const FormEvent = () => {
                 <div className='box-item-event'>
                     <label>Fecha: </label>
                     <input type="date" id="date" {...register("date", {
-                        required: {
+                        required: !eventId ? {
                             value: true,
                             message: "Necesitas introducir una fecha para poder continuar"
-                        },
+                        }: false,
                     })}
                     style={{ borderColor: errors.date ? "red" : "" }}/>
                     <p style={{color: 'red', visibility: errors.date ? 'visible' : 'hidden'}}>
-                        {errors.date ? errors.date.message : ''}
+                        {errors.date && <span>{errors.date.message as string}</span>}
                     </p>
                 </div>
                 <div className='box-item-event'>
                     <label>Hora: </label>
                     <input type="time" id="hour" {...register("hour", {
-                        required: {
+                        required: !eventId ? {
                             value: true,
                             message: "Necesitas introducir una hora para poder continuar"
-                        },
+                        }: false,
                     })}
                     style={{ borderColor: errors.hour ? "red" : "" }}/>
                     <p style={{color: 'red', visibility: errors.hour ? 'visible' : 'hidden'}}>
-                        {errors.hour ? errors.hour.message : ''}
+                        {errors.hour && <span>{errors.hour.message as string}</span>}
                     </p>
                 </div>
                 <div className='box-item-event'>
@@ -111,7 +153,7 @@ const FormEvent = () => {
             </div>
 
             <div style={{display: 'flex', justifyContent: 'center', marginTop: '30px'}}>
-                <Button text="Guardar" color="dark" />
+                <Button text="Guardar" color="dark" type="submit"/>
             </div>
         </form>
     </div>

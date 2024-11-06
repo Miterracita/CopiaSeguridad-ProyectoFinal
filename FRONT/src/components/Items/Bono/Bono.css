@@ -8,6 +8,7 @@
     display: grid;
     grid-template-columns: 80px 2fr 3fr 1fr;
     gap: 10px;
+    position: relative;
 }
 .box-bono:hover {
     border: 1px solid #eee;
@@ -60,4 +61,11 @@
     position: absolute;
     top: 40px; 
     left: 0;
+}
+
+/* mobile */
+@media (max-width: 767px) {
+    .box-bono {
+        grid-template-columns: 1fr;
+    }
 }

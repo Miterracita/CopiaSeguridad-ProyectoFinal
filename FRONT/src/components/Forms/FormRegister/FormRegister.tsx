@@ -1,44 +1,97 @@
 
+import { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom'; // Para hacer una redirección
-import { registerUser } from '../../../services/apiServices';
 import Button from '../../Button/Button';
+import Notification from '../../Notification/Notification';
+
+
 import './FormRegister.css';
 
-const FormRegister = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm({
-        defaultValues: {
-            userName: '',
-            password: '',
-            email: '',
-            img: ''
-        }
-    });
+import { registerUser } from '../../../services/apiServices';
+import { updateUser } from '../../../services/apiServicesUsers';
 
+export interface UserData {
+    userName: string,
+    email: string,
+}
+
+interface FormRegisterProps {
+    userId?: string;
+    initialData?: UserData;
+    onClose: () => void;
+}
+
+const FormRegister = ({
+    userId,
+    initialData,
+    onClose,
+}: FormRegisterProps) => {
+    const [notification, setNotification] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const { register, handleSubmit, reset, formState: { errors } } = useForm();
     const navigate = useNavigate(); // Hook para redirigir
 
-    const onSubmit = async (formData:any) => {
-        try {
-          // Llamada al servicio de registro
-          const result = await registerUser(formData);
-          console.log("Registro exitoso:", result);
-    
-        //guardamos el token
-        localStorage.setItem('token', result.token);
-        //redirigimos, en este caso la ruta es de la home
-        navigate('/listado-reservas'); 
-        // Puedes manejar la respuesta aquí, como mostrar un mensaje de éxito
-        alert('Usuario registrado correctamente');
-    
-        } catch (error) {
-          console.error('Error durante el registro:', error);
-          // Manejar el error mostrando un mensaje de error en la interfaz
-          alert('Hubo un error al registrar el usuario');
+
+    useEffect(() => {
+        // Si userId está presente, estamos editando; de lo contrario, estamos creando uno nuevo
+        if (userId) {
+            reset(initialData);  // Resetea el formulario con los datos del user existente
+        } else {
+            reset();
         }
-      };
+    }, [userId, initialData, reset]);
+
+    const onSubmit = async (formData:any) => {   
+        // formData.user = formData.user || null;
+        console.log(formData);
+        
+        try {
+            if (userId) {
+                // Actualiza el usuario si existe userId
+                await updateUser(userId, formData);
+                setNotification(`Usuario actualizado correctamente`);
+                // Agregar un retraso antes de cerrar el modal
+                setTimeout(() => {
+                    onClose();
+                }, 2000)
+            } else {
+
+                try {
+                    // Crea un nuevo usuario si no existe userId
+                    const result = await registerUser(formData);
+                    setNotification(`Usuario creado correctamente`);
+
+                    //guardamos el token
+                    localStorage.setItem('token', result.token);
+
+                    setTimeout(() => {
+                        navigate('/gestion-usuarios'); // Redirige después de crear el bono
+                    }, 2000)  
+                } catch (error){
+                    setError('Error al crear el usuario');
+                }
+             
+            }
+        
+            } catch (error: any) {
+                console.error('Error:', error);
+                setError(error.message || (userId ? 'Error al actualizar el usuario' : 'Error al crear el usuario'));
+        }
+    };
+
+    //cerrar la ventana de notificación
+    const handleCloseNotification = () => { 
+        setError(null);
+        setNotification(null);
+    };
 
   return (
     <div className="box-register-form">
+        {notification && <Notification message={notification} type="success" onClose={handleCloseNotification}/>}
+        {error && <Notification message={error} type="error" onClose={handleCloseNotification}/>}
+
         <form className="box-form-register" id="registerForm" onSubmit={handleSubmit(onSubmit)}>
             <div className='box-title'>
                 <div className='icon'>
@@ -48,7 +101,7 @@ const FormRegister = () => {
                     <path d="M9,14a9.01,9.01,0,0,0-9,9,1,1,0,0,0,2,0,7,7,0,0,1,14,0,1,1,0,0,0,2,0A9.01,9.01,0,0,0,9,14Z"></path>
                 </svg>
                 </div>
-                <h2><span>New user</span> register</h2>
+                <h2><span>{userId ? 'Update' : 'New'}</span> user register</h2>
             </div>
 
             <div className='flex'>                
@@ -62,27 +115,29 @@ const FormRegister = () => {
                     })}
                     style={{ borderColor: errors.userName ? "red" : "" }}/>
                     <p style={{color: 'red', visibility: errors.userName ? 'visible' : 'hidden'}}>
-                        {errors.userName ? errors.userName.message : ''}
+                        {errors.userName && <span>{errors.userName.message as string}</span>}
                     </p>
                 </div>
-                <div className='box-item'>
-                    <label>Password: </label>
-                    <input type="password" id="password" {...register("password", {
-                        required: {
-                            value: true,
-                            message: "La contraseña es obligatoria"
-                        },
-                        pattern: {
-                            value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8}$/,
-                            message:
-                            "La contraseña debe incluir números, letras Mayúsculas y minúsculas y como máximos 8 caracteres",
-                        },
-                    })}
-                    style={{ borderColor: errors.password ? "red" : "" }}/>
-                    <p style={{color: 'red', visibility: errors.password ? 'visible' : 'hidden'}}>
-                        {errors.password ? errors.password.message : ''}
-                    </p>
-                </div>
+                {!userId ? (
+                    <div className='box-item'>
+                        <label>Password: </label>
+                        <input type="password" id="password" {...register("password", {
+                            required: {
+                                value: true,
+                                message: "La contraseña es obligatoria"
+                            },
+                            pattern: {
+                                value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8}$/,
+                                message:
+                                "La contraseña debe incluir números, letras Mayúsculas y minúsculas y como máximos 8 caracteres",
+                            },
+                        })}
+                        style={{ borderColor: errors.password ? "red" : "" }}/>
+                        <p style={{color: 'red', visibility: errors.password ? 'visible' : 'hidden'}}>
+                            {errors.password && <span>{errors.password.message as string}</span>}
+                        </p>
+                    </div>
+                ): false}
             </div>
             <div className='box-item'>
                 <label>Email: </label>
@@ -94,7 +149,7 @@ const FormRegister = () => {
                 })}
                 style={{ borderColor: errors.email ? "red" : "" }}/>
                 <p style={{color: 'red', visibility: errors.email ? 'visible' : 'hidden'}}>
-                    {errors.email ? errors.email.message : ''}
+                    {errors.email && <p>{errors.email.message as string}</p>}
                 </p>
             </div>      
             <div className='box-item'>

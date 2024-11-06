@@ -4,7 +4,6 @@
     gap: 30px;
     padding: 0 100px;
     border-radius: 10px;
-    background-color: var(--background-four);
 }
 
 .box-title {
@@ -54,4 +53,18 @@
 .flex-event {
     display: flex;
     gap: 30px;
+}
+
+
+/* mobile */
+@media (max-width: 767px) {
+    .box-event-form {
+        padding: 0;
+    }
+    .box-form-event {
+        margin-bottom: 30px;
+    }
+    .flex-event {
+        flex-direction: column;
+    }
 }

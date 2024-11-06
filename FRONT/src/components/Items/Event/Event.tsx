@@ -2,21 +2,22 @@ import { useState } from 'react';
 
 import Notification from '../../../components/Notification/Notification.js';
 import { AdminBoxButtons } from '../../AdminBoxButtons/AdminBoxButtons.js';
+import FormEvent from '../../Forms/FormEvent/FormEvent.js';
+import Modal from '../../Modal/Modal.js';
 
 import './Event.css';
 
-import { deleteEvent, updateEvent } from '../../../services/apiServicesEvents';
+import { deleteEvent } from '../../../services/apiServicesEvents';
 
 
 interface EventProps {
     id: string;
     nombre: string;
-    descripcion: string;
+    descripcion?: string;
     fecha: string;
     hora: number;
-    capacidad: number;
-    refreshEvents:() => void; 
-    // bookings: [];
+    capacidad?: number;
+    refreshEvents:() => void;
 }
 
 export const Event = ({ 
@@ -29,19 +30,19 @@ export const Event = ({
     refreshEvents,
  }: EventProps): JSX.Element => {
     const [error, setError] = useState<string | null>(null); // Estado para el mensaje de error
-    const [success, setSuccess] = useState<string | null>(null); // Estado para el mensaje de éxito
     const [notification, setNotification] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false); // controla si el modal está visible
+
 
     const handleDeleteEvent = async () => {
         try {
             const response = await deleteEvent(id);
             const message = response.message;
             setNotification(message || `Evento con id:${id} eliminado correctamente`);
-
-            setSuccess(typeof message === 'string' ? message : JSON.stringify(message)); // Asegura que `message` sea string y no de error
             setError(null); // Limpiar errores anteriores
             
             setTimeout(() =>{
+                setNotification(null);
                 refreshEvents(); // tardará 3 segundos antes de refrescar el listado de eventos y eliminar el mensaje
             }, 3000);
             
@@ -51,23 +52,15 @@ export const Event = ({
         }
     };
 
-    const handleUpdateEvent = async () => {
-        const eventData = {
-            name: 'nuevo nombre',
-            description: 'nueva descripción',
-            date: new Date(), // Reemplaza con la fecha actual
-            hour: 10, // Reemplaza con la hora actual
-            capacity: 10,
-        };
-        
-        try {
-            const updatedEvent = await updateEvent(id, eventData);
-            setSuccess(typeof updatedEvent === 'string' ? updatedEvent : JSON.stringify(updatedEvent)); // Asegura que `message` sea string
-            // Opcionalmente, actualiza el estado o vuelve a obtener los eventos aquí
-        } catch (error: any) {
-            console.error('Error actualizando evento:', error);
-            setError(error.message ? error.message : JSON.stringify(error) || 'Error actualizando evento');
-        }
+    //abrir el modal con el formulario de eventos
+    const handleUpdateEvent = () => {
+        setShowModal(true);
+    }
+
+    //cerrar el modal
+    const handleCloseModal = () => {
+        setShowModal(false); // cerrar el modal
+        refreshEvents();
     };
 
     //cerrar la ventana de notificación
@@ -78,9 +71,10 @@ export const Event = ({
 
     return (
         <>
-            {success && <Notification message={success} type="success" onClose={handleCloseNotification}/>}
-            <div className="c-event">
-                {error && <Notification message={error} type="error" onClose={handleCloseNotification}/>}          
+            {error && <Notification message={error} type="error" onClose={handleCloseNotification}/>}
+            {notification && <Notification message={notification} type="success" onClose={handleCloseNotification}/>}
+
+            <div className="c-event">      
                 <div className="box-event">
                     <div className='info-event' id={id}>
                         <h3><span>{nombre}</span></h3>
@@ -95,6 +89,21 @@ export const Event = ({
                     />
                 </div>
             </div>
+            {showModal && (
+                <Modal showModal={showModal} onCloseModal={handleCloseModal}>
+                    <FormEvent
+                        eventId={id}
+                        onClose={handleCloseModal}
+                        initialData={{
+                            name: nombre,
+                            description: descripcion,
+                            date: fecha,
+                            hour: hora,
+                            capacity: capacidad,
+                        }}
+                    />
+                </Modal>
+            )}
         </>
     );
 };

@@ -10,7 +10,7 @@ export interface ButtonTypes {
 
   icon?: string;
   
-  onClick?: () => void;
+  onClick?: (e:any) => void;
 
   type: 'submit' | 'button';
 }

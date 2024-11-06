@@ -74,3 +74,10 @@ a.btn.blue {
 .margin-top {
     margin-top: 10px;
 }
+
+/* mobile */
+@media (max-width: 767px) {
+    .box-event {
+        grid-template-columns: 1fr;
+    }
+}

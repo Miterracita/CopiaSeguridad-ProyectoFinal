@@ -2,12 +2,14 @@ import { useState } from 'react';
 
 import Notification from '../../../components/Notification/Notification.js';
 import { AdminBoxButtons } from '../../AdminBoxButtons/AdminBoxButtons';
+import FormBono from '../../Forms/FormBono/FormBono.js';
+import Modal from '../../Modal/Modal.js';
 
 import './Bono.css';
 
-import { deleteBono, updateBono } from '../../../services/apiServicesBonos.js';
+import { deleteBono } from '../../../services/apiServicesBonos.js';
 
-interface User {
+interface UserData {
   _id: string;
   userName: string;
   email: string;
@@ -21,7 +23,7 @@ export interface BonoTypes {
   type: string,
   active: boolean,
   code: string,
-  user?: User | null;
+  user?: UserData;
   totalUses: number,
   availableUses: number,
   expirationDate?: string,
@@ -33,6 +35,7 @@ export interface BonoTypes {
 const Bono = ({
   id,
   name,
+  type,
   active,
   user,
   totalUses,
@@ -44,24 +47,34 @@ const Bono = ({
   
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false); // controla si el modal está visible
+
+
 
   const handleDeleteBono = async () => {
     try {
       const response = await deleteBono(id);
       const message = response.message;
-      setNotification(message || `Bono con id:${id} eliminado correctamente`);
+      setNotification(message || `Bono eliminado correctamente`);
       
       setTimeout(() =>{
+        setNotification(null); //cierra la notificacion
         refreshBonos();  // Llama a refreshBonos después de eliminar
       }, 3000);
       
     } catch (error:any) {
       console.error('Error eliminando bono:', error);
-      setError(error.message || 'Error eliminando user');
+      setError(error.message || 'Error eliminando el bono');
     }
   };
 
-  const handleUpdateBono = () => {}
+  const handleUpdateBono = () => {
+    setShowModal(true); //abrir el modal con el formulario de bonos
+  }
+  const handleCloseModal = () => {
+    setShowModal(false); // cerrar el modal
+    refreshBonos();
+  };
 
   
   //cerrar la ventana de notificación
@@ -108,7 +121,7 @@ const Bono = ({
                 <p>Asignado al usuario: <span>{user.userName}</span></p>
               )}
 
-              {expirationDate && (<p>expirationDate: <span>{expirationDate}</span></p>)}
+              {expirationDate && (<p>Fecha caducidad: <span>{expirationDate}</span></p>)}
               {/* {reservations && (<p>Reservas: <span>{reservations}</span></p>)} */}
             </div>
 
@@ -117,6 +130,21 @@ const Bono = ({
               handleDelete={handleDeleteBono}
             />
         </div>
+
+        {/* Mostrar FormBono solo si `showModal` es true */}
+        {showModal && (
+          <Modal showModal={showModal} onCloseModal={handleCloseModal}>
+            <FormBono
+              bonoId={id}
+              onClose={handleCloseModal}// Prop para cerrar el formulario
+              initialData={{
+                user,
+                expirationDate,
+                type,
+              }}
+            />
+          </Modal>
+        )}
     </div>
   )
 };

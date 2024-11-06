@@ -15,7 +15,6 @@ import './BonoList.css'
 import { getBono, getSearch } from '../../services/apiServicesBonos.js';
 
 
-
 function BonoList() {
 
   const [bonos, setBonos] = useState([]);
@@ -39,6 +38,7 @@ function BonoList() {
     refreshBonos();
   }, []);
 
+  //filtros de busqueda de bonos
   const handleSearch = async (e:any) => {
     e.preventDefault();
 
@@ -72,6 +72,7 @@ function BonoList() {
     setError(null);
   };
 
+  // limpiar filtros
   const clearFilters = () => {
     setUsername('');
     setCodigo('');
@@ -141,7 +142,6 @@ function BonoList() {
                         availableUses={bono.availableUses}
                         expirationDate={bono.expirationDate}
                         refreshBonos={refreshBonos}
-                        // bonos={bonos}
                         user={bono.user}
                         id={bono._id}
                     />

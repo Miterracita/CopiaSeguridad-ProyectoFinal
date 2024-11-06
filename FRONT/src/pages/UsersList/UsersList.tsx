@@ -4,18 +4,15 @@ import Logo from '../../components/Logo/Logo.js';
 import NavBar from '../../components/NavBar/NavBar.js';
 import SecondaryNavBar from '../../components/SecondaryNavBar/SecondaryNavBar.js';
 import Notification from '../../components/Notification/Notification.js';
-
+import User from '../../components/Items/User/User.js';
 import Wrapper from '../../components/Wrapper/Wrapper.js';
 import WrapperNav from '../../components/WrapperNav/WrapperNav.js';
 import WrapperFiltros from '../../components/Forms/WrapperFiltros/WrapperFiltros.js';
-
-import User from '../../components/Items/User/User.js';
-
+import Button from '../../components/Button/Button.js';
 
 import './UsersList.css'
 
 import { getUsers, getSearch } from '../../services/apiServicesUsers';
-import Button from '../../components/Button/Button.js';
 
 
 function UsersList() {
@@ -26,59 +23,61 @@ function UsersList() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
 
-    const refreshUsers = async () => {
-      try {
-        const userList = await getUsers();
-        setUsers(userList || []);  // Aseguramos que siempre sea un arreglo
+  const refreshUsers = async () => {
+    try {
+      const userList = await getUsers();
+      setUsers(userList || []);  // Aseguramos que siempre sea un arreglo
+    } catch (error:any) {
+      console.error('Error fetching users:', error);
+      setError(error.message || 'Error al obtener la lista de usuarios');
+    }
+  };
+
+  useEffect(() => {
+    refreshUsers(); //cargamos la lista de usuarios desde el back
+  }, []);
+
+  //filtros de busqueda
+  const handleSearch = async (e:any) => {
+    e.preventDefault();
+
+    if (!username && !email ) {
+      setError("Por favor, ingrese uno de los campos antes de buscar");
+      return; // No se envía la solicitud al no tener ningún campo
+    }
+
+    // Verificar que no se hayan ingresado ambos campos
+    if (username && email) {
+      setError("Por favor, ingrese sólo uno de los dos campos: 'username' o 'email'.");
+      return;
+    }
+
+    // Limpiar advertencia en caso de que se haya corregido el error
+    setError(null);
+
+    try {
+      const result = await getSearch(username, email);
+      setUsers(result); // Actualiza el estado con los usuarios encontrados
+      setError(''); // Limpia errores anteriores
       } catch (error:any) {
-        console.error('Error fetching users:', error);
-        setError(error.message || 'Error al obtener la lista de usuarios');
-      }
-    };
+        console.error('Error en la búsqueda:', error);
+        setError(error.message || 'No se pudieron encontrar usuarios.');
+        setUsers([]); // Limpia los resultados si hay un error
+    }
+  };
 
-    useEffect(() => {
-      refreshUsers(); //cargamos la lista de usuarios desde el back
-    }, []);
+  //cerrar la ventana de notificación
+  const handleCloseNotification = () => { 
+    setError(null);
+  };
 
-    const handleSearch = async (e:any) => {
-      e.preventDefault();
-
-      if (!username && !email ) {
-        setError("Por favor, ingrese uno de los campos antes de buscar");
-        return; // No se envía la solicitud al no tener ningún campo
-      }
-
-      // Verificar que no se hayan ingresado ambos campos
-      if (username && email) {
-        setError("Por favor, ingrese sólo uno de los dos campos: 'username' o 'email'.");
-        return;
-      }
-
-      // Limpiar advertencia en caso de que se haya corregido el error
-      setError(null);
-
-      try {
-        const result = await getSearch(username, email);
-        setUsers(result); // Actualiza el estado con los usuarios encontrados
-        setError(''); // Limpia errores anteriores
-        } catch (error:any) {
-          console.error('Error en la búsqueda:', error);
-          setError(error.message || 'No se pudieron encontrar usuarios.');
-          setUsers([]); // Limpia los resultados si hay un error
-      }
-    };
-
-    const clearFilters = () => {
-      setUsername('');
-      setEmail('');
-      setError(null);
-      refreshUsers();
-    };
-    
-    //cerrar la ventana de notificación
-    const handleCloseNotification = () => { 
-      setError(null);
-    };
+  // limpiar filtros
+  const clearFilters = () => {
+    setUsername('');
+    setEmail('');
+    setError(null);
+    refreshUsers();
+  };
 
   return (
     <div className="p-users-list">
@@ -137,7 +136,7 @@ function UsersList() {
                       rol={user.rol}
                       imagenPerfil={user.imagenPerfil}
                       bonos={user.bonos}
-                      setUsers={setUsers}
+                      refreshUsers={refreshUsers}
                     />
                   ))
               )}

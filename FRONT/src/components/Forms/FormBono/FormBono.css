@@ -4,7 +4,6 @@
     gap: 30px;
     padding: 0px 100px;
     border-radius: 10px;
-    background-color: var(--background-four);
 }
 
 .box-title {
@@ -65,4 +64,14 @@
 .flex {
     display: flex;
     gap: 30px;
+}
+
+/* mobile */
+@media (max-width: 767px) {
+    .box-bono-form {
+        padding: 0px;
+    }
+    .box-form-bono {
+        margin-bottom: 30px;
+    }
 }

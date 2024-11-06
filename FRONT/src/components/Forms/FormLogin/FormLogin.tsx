@@ -1,4 +1,5 @@
 
+import { useNavigate } from 'react-router-dom'; // Para hacer una redirección
 import Button from '../../Button/Button';
 import { useForm } from "react-hook-form";
 import { login } from '../../../services/apiServices';
@@ -12,21 +13,22 @@ const FormLogin = () => {
             password: ''
         }
     });
+    
+    const navigate = useNavigate(); // Hook para redirigir
 
     const onSubmit = async (formData:any) => {
-        console.log('Submit del formulario:', formData);
         
         try {
           // Llamamos a la función de login que hace la petición al backend
           const response = await login(formData.userName, formData.password);
   
           if (response.token) {
+
             // Si el login es exitoso, guardamos el token en el localStorage
             localStorage.setItem("token", response.token);
-            // Aquí rediriges o haces lo que necesites
-            console.log("Login exitoso, token recibido:", response.token);
-            // Por ejemplo, puedes redirigir a otra página o componente
-            // window.location.href = "/eventos"; // Redirección a la página de eventos
+
+            navigate('/gestion-usuarios'); 
+
           } else {
             console.error('Error en la respuesta:', response);
             alert("Error al iniciar sesión. Por favor, inténtalo de nuevo.");
@@ -73,7 +75,7 @@ const FormLogin = () => {
                     </p>
                 </div>
 
-                <Button text="Enviar" color="dark" />
+                <Button text="Enviar" color="dark" type='submit'/>
             </div>
         </form>
 
