@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom'; // Para hacer una redirección
 import Button from '../../Button/Button';
@@ -43,7 +43,7 @@ const FormRegister = ({
         }
     }, [userId, initialData, reset]);
 
-    const onSubmit = async (formData:any) => {   
+    const onSubmit = useCallback(async (formData:any) => {   
         // formData.user = formData.user || null;
         console.log(formData);
         
@@ -79,7 +79,7 @@ const FormRegister = ({
                 console.error('Error:', error);
                 setError(error.message || (userId ? 'Error al actualizar el usuario' : 'Error al crear el usuario'));
         }
-    };
+    }, [userId, navigate, onClose]);
 
     //cerrar la ventana de notificación
     const handleCloseNotification = () => { 

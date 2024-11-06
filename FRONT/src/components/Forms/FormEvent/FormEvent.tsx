@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Button from '../../Button/Button';
 import Notification from '../../Notification/Notification';
 
@@ -44,7 +44,7 @@ const FormEvent = ({
         }
     }, [eventId, initialData, reset]);
 
-    const onSubmit = async (formData:any) => {
+    const onSubmit = useCallback(async (formData:any) => {
         try {
             if (eventId) {
 
@@ -73,12 +73,12 @@ const FormEvent = ({
                 console.error('Error durante la creación del evento:', error);
                 setError(error.message || (eventId ? 'Error al actualizar el evento' : 'Error al crear el evento'));
         }
-    };
+    }, [eventId, navigate, onClose]);
 
-    const handleCloseNotification = () => { 
+    const handleCloseNotification = useCallback(() => { 
         setError(null);
         setNotification(null);
-    };
+    }, []);
 
 
   return (

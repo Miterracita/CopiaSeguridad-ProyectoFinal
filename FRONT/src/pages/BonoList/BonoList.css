@@ -24,3 +24,13 @@ h2 span {
         padding: 0;
     }
 }
+/* tablet */
+@media (max-width: 1024px) {
+    .bonos {
+        padding: 0 40px;
+    }
+    .secondary-nav-bar {
+        gap: 40px;
+        width: auto;
+    }
+}

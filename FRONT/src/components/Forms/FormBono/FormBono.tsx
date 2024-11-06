@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
 import Button from '../../Button/Button';
@@ -80,7 +80,7 @@ const FormBono = ({
         }
     }, [bonoId, initialData, reset]);
 
-    const onSubmit = async (formData:any) => {   
+    const onSubmit = useCallback(async (formData:any) => {   
         
         try {
             if (bonoId) {
@@ -106,13 +106,13 @@ const FormBono = ({
                 console.error('Error:', error);
                 setError(error.message || (bonoId ? 'Error al actualizar el bono' : 'Error al crear el bono'));
         }
-    };
+    }, [bonoId, navigate, onClose]);
 
     //cerrar la ventana de notificación
-    const handleCloseNotification = () => { 
+    const handleCloseNotification = useCallback(() => { 
         setError(null);
         setNotification(null);
-    };
+    }, []);
 
     return (
         <div className="box-bono-form">

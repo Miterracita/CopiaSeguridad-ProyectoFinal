@@ -25,3 +25,9 @@ h2 span {
         padding: 0;
     }
 }
+/* tablet */
+@media (max-width: 1024px) {
+    .events {
+        padding: 0 25px;
+    }
+}

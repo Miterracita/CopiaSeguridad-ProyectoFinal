@@ -53,3 +53,9 @@
         padding: 0px;
     }
 }
+/* tablet */
+@media (max-width: 1024px) {
+    .users {
+        padding: 0 25px;
+    }
+}
