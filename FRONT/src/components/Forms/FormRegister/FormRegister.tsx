@@ -44,35 +44,36 @@ const FormRegister = ({
     }, [userId, initialData, reset]);
 
     const onSubmit = useCallback(async (formData:any) => {   
-        // formData.user = formData.user || null;
-        console.log(formData);
+        const data = new FormData();
+        data.append('email', formData.email);
+        data.append('userName', formData.userName);
+        data.append('password', formData.password);
+        if (formData.img[0]) {
+            data.append('imagenPerfil', formData.img[0]);
+        }
+
+        console.log([...data]);
         
         try {
             if (userId) {
                 // Actualiza el usuario si existe userId
-                await updateUser(userId, formData);
+                await updateUser(userId, data);
                 setNotification(`Usuario actualizado correctamente`);
                 // Agregar un retraso antes de cerrar el modal
                 setTimeout(() => {
                     onClose();
                 }, 2000)
             } else {
+                // Crea un nuevo usuario si no existe userId
+                const result = await registerUser(data);
+                setNotification(`Usuario creado correctamente`);
 
-                try {
-                    // Crea un nuevo usuario si no existe userId
-                    const result = await registerUser(formData);
-                    setNotification(`Usuario creado correctamente`);
+                //guardamos el token
+                localStorage.setItem('token', result.token);
 
-                    //guardamos el token
-                    localStorage.setItem('token', result.token);
-
-                    setTimeout(() => {
-                        navigate('/gestion-usuarios'); // Redirige después de crear el bono
-                    }, 2000)  
-                } catch (error){
-                    setError('Error al crear el usuario');
-                }
-             
+                setTimeout(() => {
+                    navigate('/gestion-usuarios'); // Redirige después de crear el bono
+                }, 2000)  
             }
         
             } catch (error: any) {

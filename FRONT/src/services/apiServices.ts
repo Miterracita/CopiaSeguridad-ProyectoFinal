@@ -50,10 +50,10 @@ export const login = async (userName:any, password:any) => {
 export const registerUser = async (data:any) => {
   const opciones = {
     method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    body: data, // Enviar directamente el FormData
+    // headers: {
+    //   "Content-Type": "application/json",
+    // },
   };
 
   try {

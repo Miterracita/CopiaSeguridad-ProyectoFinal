@@ -24,10 +24,7 @@ export const updateUser = async (id: any, userData: any) => {
   try {
     const response = await fetch(`${LOCAL_URL}/users/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
+      body: userData,
     });
 
     if (!response.ok) {
