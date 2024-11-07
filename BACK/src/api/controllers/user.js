@@ -7,7 +7,9 @@ const bcrypt = require("bcrypt");
 //postUser - create
 const registro = async (req, res, next) => {
   try {
-
+    console.log('Request Body:', req.body);
+    console.log('Request File:', req.file);
+    
     const newUser = new User({
       email: req.body.email,
       userName: req.body.userName,
