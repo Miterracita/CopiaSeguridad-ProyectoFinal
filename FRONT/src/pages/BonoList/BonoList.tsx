@@ -20,8 +20,8 @@ function BonoList() {
   const [bonos, setBonos] = useState([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [username, setUsername] = useState('');
-  const [codigo, setCodigo] = useState('');
+  const [user, setUser] = useState('');
+  const [code, setCode] = useState('');
 
   const refreshBonos = useCallback(async () => {
     try {
@@ -42,13 +42,13 @@ function BonoList() {
   const handleSearch = useCallback(async (e:any) => {
     e.preventDefault();
 
-    if (!username && !codigo ) {
+    if (!user && !code ) {
       setError("Por favor, ingrese uno de los campos antes de buscar");
       return; // No se envía la solicitud al no tener ningún campo
     }
 
     // Verificar que no se hayan ingresado ambos campos
-    if (username && codigo) {
+    if (user && code) {
       setError("Por favor, ingrese sólo uno de los dos campos: 'username' o 'codigo'.");
       return;
     }
@@ -57,15 +57,15 @@ function BonoList() {
     setError(null);
 
     try {
-      const result = await getSearch(username, codigo);
-      setBonos(result); // Actualiza el estado con los bonos encontrados
+      const result = await getSearch(user, code);
+      setBonos(result); // Actualiza el lisado con los bonos encontrados
       setError(''); // Limpia errores anteriores
       } catch (error:any) {
         console.error('Error en la búsqueda:', error);
         setError(error.message || 'No se pudieron encontrar bonos.');
         setBonos([]); // Limpia los resultados si hay un error
     }
-  }, [username, codigo]);
+  }, [user, code]);
 
   //cerrar la ventana de notificación
   const handleCloseNotification = useCallback(() => { 
@@ -74,8 +74,8 @@ function BonoList() {
 
   // limpiar filtros
   const clearFilters = useCallback(() => {
-    setUsername('');
-    setCodigo('');
+    setUser('');
+    setCode('');
     setError(null);
     refreshBonos();
   }, [refreshBonos]);
@@ -110,15 +110,15 @@ function BonoList() {
                     <input
                         type="text"
                         placeholder="username con bono asignado"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={user}
+                        onChange={(e) => setUser(e.target.value)}
                     />
                     <label>Código Bono:</label>
                     <input
                         type="text"
                         placeholder="código del bono"
-                        value={codigo}
-                        onChange={(e) => setCodigo(e.target.value)}
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
                     />
                     <div className='b-buttons'>
                       <Button color="dark" onClick={handleSearch} text="buscar" type="submit" />

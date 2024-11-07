@@ -27,6 +27,8 @@ function UsersList() {
     try {
       const userList = await getUsers();
       setUsers(userList || []);  // Aseguramos que siempre sea un arreglo
+      console.log(userList)
+      
     } catch (error:any) {
       console.error('Error fetching users:', error);
       setError(error.message || 'Error al obtener la lista de usuarios');

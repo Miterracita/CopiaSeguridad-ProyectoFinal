@@ -93,10 +93,10 @@ export const getSearch = async (user: string, code: string) => {
 
       // Agregar parámetros si están definidos
       if (user) {
-          queryParams.append('username', user);
+          queryParams.append('user', user);
       }
       if (code) {
-          queryParams.append('codigo', code);
+          queryParams.append('code', code);
       }
 
       const response = await fetch(`${LOCAL_URL}/bonos/search?${queryParams.toString()}`);

@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { useEffect, memo, useCallback } from 'react';
 
 import Notification from '../../Notification/Notification.js';
 import { AdminBoxButtons } from '../../AdminBoxButtons/AdminBoxButtons.js';
@@ -59,7 +59,7 @@ const User = memo (({
       } = useCommonReducer();
 
     const imagenXDefecto = "https://res.cloudinary.com/dq2daoeex/image/upload/c_thumb,w_200,g_face/v1723660717/Proyecto10/oy1tksyz1ycc1edxcfqb.jpg";
-
+    
     const handleDeleteUser = useCallback(async () => {
         try {
           const response = await deleteUser(_id);

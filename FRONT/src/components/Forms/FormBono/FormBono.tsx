@@ -41,30 +41,29 @@ const FormBono = ({
     const [notification, setNotification] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+            // Fetch users from the API
+            const fetchAllUsers = async () => {
+                try {
+                    const usersData = await getUsers();
+                    setUsers(usersData);
+                } catch (error: any) {
+                    setError(error.message || 'Error deleting user');
+                }
+            };
+    
+            // Fetch bono types from the API
+            const fetchBonoTypes = async () => {
+                try {
+                    const bonoData = await getBono();
+                    const types: string[] = bonoData.map((bono:any) => bono.type);
+                    const uniqueTypes = Array.from(new Set(types)); //para eliminar duplicados
+                    setBonoTypes(uniqueTypes);
+                } catch (error:any) {
+                    setError(error.message || 'Error fetching bono types:');
+                }
+            };
+
     useEffect(() => {
-
-        // Fetch users from the API
-        const fetchAllUsers = async () => {
-            try {
-                const usersData = await getUsers();
-                setUsers(usersData);
-            } catch (error: any) {
-                setError(error.message || 'Error deleting user');
-            }
-        };
-
-        // Fetch bono types from the API
-        const fetchBonoTypes = async () => {
-            try {
-                const bonoData = await getBono();
-                const types: string[] = bonoData.map((bono:any) => bono.type);
-                const uniqueTypes = Array.from(new Set(types)); //para eliminar duplicados
-                setBonoTypes(uniqueTypes);
-            } catch (error:any) {
-                setError(error.message || 'Error fetching bono types:');
-            }
-        };
-
         fetchAllUsers();
         fetchBonoTypes();
     }, []);
@@ -80,17 +79,18 @@ const FormBono = ({
         }
     }, [bonoId, initialData, reset]);
 
-    const onSubmit = useCallback(async (formData:any) => {   
-        
+    const onSubmit = useCallback(async (formData:any) => {
+                
         try {
             if (bonoId) {
                 // Actualiza el bono si existe bonoId
                 await updateBono(bonoId, formData);
                 setNotification(`Bono actualizado correctamente`);
-                // Agregar un retraso antes de cerrar el modal
+
                 setTimeout(() => {
                     onClose();
                 }, 2000)
+
             } else {
                 // Crea un nuevo bono si no existe bonoId
                 await newBono(formData);
@@ -107,6 +107,8 @@ const FormBono = ({
                 setError(error.message || (bonoId ? 'Error al actualizar el bono' : 'Error al crear el bono'));
         }
     }, [bonoId, navigate, onClose]);
+
+      
 
     //cerrar la ventana de notificación
     const handleCloseNotification = useCallback(() => { 
